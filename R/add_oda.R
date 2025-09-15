@@ -13,6 +13,7 @@
 #' @description The `add_oda()` function works by reading in ODA data from DAC2a and DAC3a data tables via a developer API from the OECD data explorer (https://data-explorer.oecd.org/). This approach has certain trade-offs. The main benefit is that the user does not have to eat up extra RAM storing a large-ish dyadic donor-recipient dataset in memory permanently and locally on your own machine. The downside is that to access the data in an active R session you need an internet connection, and calling the data via the OECD's API may take a few seconds to a minute depending on the quality of your connection. I think these costs are well worth the benefit of saving RAM.
 #' @examples 
 #' library(tidyverse)
+#' library(peacesciencer)
 #' library(odadata)
 #' 
 #' # make a dyad-year dataset:
@@ -26,6 +27,11 @@
 #'   drop_na(oda_committed) # drops non-recipients 
 #' @export
 add_oda <- function(data, type = "donor") {
+  
+  ## do you have a dataset?
+  if(missing(data)) {
+    stop("You must provide an existing data object to which to add ODA data.")
+  }
   
   ## check that you have the right kind of dataset
   valid_codes <- 
@@ -52,27 +58,27 @@ add_oda <- function(data, type = "donor") {
   ## get the data
   dac2a <- read.csv(url1)
   dac3a <- read.csv(url2)
-  dac_stacked <- bind_rows(dac2a, dac3a)
+  dac_stacked <- dplyr::bind_rows(dac2a, dac3a)
   
   ## clean the data
   if(dyadic & cow) {
-    donor_names <- suppressWarnings(tibble(
+    donor_names <- suppressWarnings(tibble::tibble(
       DONOR = unique(dac_stacked$DONOR),
       ccode1 = countrycode::countrycode(
         DONOR, "iso3c", "cown"
       )
     ))
-    recipient_names <- suppressWarnings(tibble(
+    recipient_names <- suppressWarnings(tibble::tibble(
       RECIPIENT = unique(dac_stacked$RECIPIENT),
       ccode2 = countrycode::countrycode(
         RECIPIENT, "iso3c", "cown"
       )
     ))
     oda_data <- dac_stacked |>
-      left_join(donor_names, by = "DONOR") |>
-      left_join(recipient_names, by = "RECIPIENT") |>
-      drop_na(ccode1, ccode2) |>
-      transmute(
+      dplyr::left_join(donor_names, by = "DONOR") |>
+      dplyr::left_join(recipient_names, by = "RECIPIENT") |>
+      tidyr::drop_na(ccode1, ccode2) |>
+      dplyr::transmute(
         ccode1, ccode2, year = TIME_PERIOD,
         oda = round(OBS_VALUE, 3),
         flow = ifelse(
@@ -81,46 +87,46 @@ add_oda <- function(data, type = "donor") {
           "oda_committed"
         )
       ) |>
-      pivot_wider(
+      tidyr::pivot_wider(
         names_from = flow,
         values_from = oda
       )
     final_data <- data |>
-      left_join(oda_data, by = c("ccode1", "ccode2", "year")) |>
-      mutate(
+      dplyr::left_join(oda_data, by = c("ccode1", "ccode2", "year")) |>
+      dplyr::mutate(
         oda_disbursed = ifelse(
           ccode1 %in% donor_names$ccode1 & 
             ccode2 %in% recipient_names$ccode2 &
             year %in% 1960:2023,
-          replace_na(oda_disbursed, 0),
+          tidyr::replace_na(oda_disbursed, 0),
           oda_disbursed
         ),
         oda_committed = ifelse(
           ccode1 %in% donor_names$ccode1 &
             ccode2 %in% recipient_names$ccode2 &
             year %in% 1966:2023,
-          replace_na(oda_committed, 0),
+          tidyr::replace_na(oda_committed, 0),
           oda_committed
         )
       )
   } else if(dyadic & !cow) {
-    donor_names <- suppressWarnings(tibble(
+    donor_names <- suppressWarnings(tibble::tibble(
       DONOR = unique(dac_stacked$DONOR),
       gwcode1 = countrycode::countrycode(
         DONOR, "iso3c", "gwn"
       )
     ))
-    recipient_names <- suppressWarnings(tibble(
+    recipient_names <- suppressWarnings(tibble::tibble(
       RECIPIENT = unique(dac_stacked$RECIPIENT),
       gwcode2 = countrycode::countrycode(
         RECIPIENT, "iso3c", "gwn"
       )
     ))
     oda_data <- dac_stacked |>
-      left_join(donor_names, by = "DONOR") |>
-      left_join(recipient_names, by = "RECIPIENT") |>
-      drop_na(gwcode1, gwcode2) |>
-      transmute(
+      dplyr::left_join(donor_names, by = "DONOR") |>
+      dplyr::left_join(recipient_names, by = "RECIPIENT") |>
+      tidyr::drop_na(gwcode1, gwcode2) |>
+      dplyr::transmute(
         gwcode1, gwcode2, year = TIME_PERIOD,
         oda = round(OBS_VALUE, 3),
         flow = ifelse(
@@ -129,36 +135,36 @@ add_oda <- function(data, type = "donor") {
           "oda_committed"
         )
       ) |>
-      pivot_wider(
+      tidyr::pivot_wider(
         names_from = flow,
         values_from = oda
       )
     final_data <- data |>
-      left_join(oda_data, by = c("gwcode1", "gwcode2", "year")) |>
-      mutate(
+      dplyr::left_join(oda_data, by = c("gwcode1", "gwcode2", "year")) |>
+      dplyr::mutate(
         oda_disbursed = ifelse(
           gwcode1 %in% donor_names$gwcode1 & 
             gwcode2 %in% recipient_names$gwcode2 &
             year %in% 1960:2023,
-          replace_na(oda_disbursed, 0),
+          tidyr::replace_na(oda_disbursed, 0),
           oda_disbursed
         ),
         oda_committed = ifelse(
           gwcode1 %in% donor_names$gwcode1 &
             gwcode2 %in% recipient_names$gwcode2 &
             year %in% 1966:2023,
-          replace_na(oda_committed, 0),
+          tidyr::replace_na(oda_committed, 0),
           oda_committed
         )
       )
   } else if(!dyadic & cow) {
-    donor_names <- suppressWarnings(tibble(
+    donor_names <- suppressWarnings(tibble::tibble(
       DONOR = unique(dac_stacked$DONOR),
       ccode1 = countrycode::countrycode(
         DONOR, "iso3c", "cown"
       )
     ))
-    recipient_names <- suppressWarnings(tibble(
+    recipient_names <- suppressWarnings(tibble::tibble(
       RECIPIENT = unique(dac_stacked$RECIPIENT),
       ccode2 = countrycode::countrycode(
         RECIPIENT, "iso3c", "cown"
@@ -166,9 +172,9 @@ add_oda <- function(data, type = "donor") {
     ))
   
     oda_data <- dac_stacked |>
-      left_join(donor_names, by = "DONOR") |>
-      left_join(recipient_names, by = "RECIPIENT") |>
-      drop_na(ccode1, ccode2)
+      dplyr::left_join(donor_names, by = "DONOR") |>
+      dplyr::left_join(recipient_names, by = "RECIPIENT") |>
+      tidyr::drop_na(ccode1, ccode2)
     if(type == "donor") {
       oda_data <- oda_data |>
         rename(ccode = ccode1)
@@ -177,7 +183,7 @@ add_oda <- function(data, type = "donor") {
         rename(ccode = ccode2)
     }
     oda_data <- oda_data |>
-      transmute(
+      dplyr::transmute(
         ccode, year = TIME_PERIOD,
         oda = OBS_VALUE,
         flow = ifelse(
@@ -191,34 +197,34 @@ add_oda <- function(data, type = "donor") {
         oda = sum(oda),
         .groups = "drop"
       ) |>
-      pivot_wider(
+      tidyr::pivot_wider(
         names_from = flow,
         values_from = oda
       )
     final_data <- data |>
-      left_join(oda_data, by = c("ccode", "year")) |>
-      mutate(
+      dplyr::left_join(oda_data, by = c("ccode", "year")) |>
+      dplyr::mutate(
         oda_disbursed = ifelse(
           ccode %in% donor_names$ccode1 &
             year %in% 1960:2023,
-          replace_na(oda_disbursed, 0),
+          tidyr::replace_na(oda_disbursed, 0),
           oda_disbursed
         ),
         oda_committed = ifelse(
           ccode %in% donor_names$ccode1 &
             year %in% 1966:2023,
-          replace_na(oda_committed, 0),
+          tidyr::replace_na(oda_committed, 0),
           oda_committed
         )
       )
   } else {
-    donor_names <- suppressWarnings(tibble(
+    donor_names <- suppressWarnings(tibble::tibble(
       DONOR = unique(dac_stacked$DONOR),
       gwcode1 = countrycode::countrycode(
         DONOR, "iso3c", "gwn"
       )
     ))
-    recipient_names <- suppressWarnings(tibble(
+    recipient_names <- suppressWarnings(tibble::tibble(
       RECIPIENT = unique(dac_stacked$RECIPIENT),
       gwcode2 = countrycode::countrycode(
         RECIPIENT, "iso3c", "gwn"
@@ -226,9 +232,9 @@ add_oda <- function(data, type = "donor") {
     ))
     
     oda_data <- dac_stacked |>
-      left_join(donor_names, by = "DONOR") |>
-      left_join(recipient_names, by = "RECIPIENT") |>
-      drop_na(gwcode1, gwcode2)
+      dplyr::left_join(donor_names, by = "DONOR") |>
+      dplyr::left_join(recipient_names, by = "RECIPIENT") |>
+      tidyr::drop_na(gwcode1, gwcode2)
     if(type == "donor") {
       oda_data <- oda_data |>
         rename(gwcode = gwcode1)
@@ -237,7 +243,7 @@ add_oda <- function(data, type = "donor") {
         rename(gwcode = gwcode2)
     }
     oda_data <- oda_data |>
-      transmute(
+      dplyr::transmute(
         gwcode, year = TIME_PERIOD,
         oda = OBS_VALUE,
         flow = ifelse(
@@ -251,23 +257,23 @@ add_oda <- function(data, type = "donor") {
         oda = sum(oda),
         .groups = "drop"
       ) |>
-      pivot_wider(
+      tidyr::pivot_wider(
         names_from = flow,
         values_from = oda
       )
     final_data <- data |>
-      left_join(oda_data, by = c("gwcode", "year")) |>
-      mutate(
+      dplyr::left_join(oda_data, by = c("gwcode", "year")) |>
+      dplyr::mutate(
         oda_disbursed = ifelse(
           gwcode %in% donor_names$gwcode1 &
             year %in% 1960:2023,
-          replace_na(oda_disbursed, 0),
+          tidyr::replace_na(oda_disbursed, 0),
           oda_disbursed
         ),
         oda_committed = ifelse(
           gwcode %in% donor_names$gwcode1 &
             year %in% 1966:2023,
-          replace_na(oda_committed, 0),
+          tidyr::replace_na(oda_committed, 0),
           oda_committed
         )
       )

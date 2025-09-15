@@ -9,7 +9,10 @@ License: `use_mit_license()`
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.1
-Imports: dplyr,
+URL: https://github.com/milesdwilliams15/odadata/
+BugReports: https://github.com/milesdwilliams15/issues/
+Imports: peacesciencer,
+    countrycode,
+    dplyr,
     tibble,
-    tidyr,
-    peacesciencer
+    tidyr

@@ -27,6 +27,7 @@ DAC2a (disbursements) and DAC3a (commitments). Values are in millions of
 }
 \examples{
 library(tidyverse)
+library(peacesciencer)
 library(odadata)
 
 # make a dyad-year dataset:
