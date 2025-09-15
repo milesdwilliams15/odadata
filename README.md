@@ -22,11 +22,10 @@ The workhorse function of `{odadata}` is `add_oda()`. It is meant to work in con
 
 To use the function, you must first create a country dyad-year or state-year dataset using `{peacesciencer}`. Then you can use `add_oda()` to populate your data with ODA values.
 
-First, you should open up the `{tidyverse}`, `{peacesciencer}`, and `{odadata}`:
+First, you should `{odadata}` and (recommended) the `{tidyverse}`. `{peacesciencer}` has been declared as a dependency so it is opened automatically when opening `{odatadata}`.
 
 ```
 library(tidyverse)
-library(peacesciencer)
 library(odadata)
 ```
 

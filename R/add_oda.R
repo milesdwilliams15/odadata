@@ -13,7 +13,6 @@
 #' @description The `add_oda()` function works by reading in ODA data from DAC2a and DAC3a data tables via a developer API from the OECD data explorer (https://data-explorer.oecd.org/). This approach has certain trade-offs. The main benefit is that the user does not have to eat up extra RAM storing a large-ish dyadic donor-recipient dataset in memory permanently and locally on your own machine. The downside is that to access the data in an active R session you need an internet connection, and calling the data via the OECD's API may take a few seconds to a minute depending on the quality of your connection. I think these costs are well worth the benefit of saving RAM.
 #' @examples 
 #' library(tidyverse)
-#' library(peacesciencer)
 #' library(odadata)
 #' 
 #' # make a dyad-year dataset:
