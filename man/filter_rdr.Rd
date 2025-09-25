@@ -7,22 +7,24 @@
 filter_rdr(data, by = "commitments")
 }
 \arguments{
-\item{data}{A data frame constructed with the \code{{peacesciencer}} API and populated with ODA values using the \code{add_oda()} function.}
+\item{data}{A data frame constructed with the \code{{peacesciencer}} API and populated with ODA values using the \code{add_oda()} function or Chinese development finance values using \code{add_gcdf()}.}
 
-\item{by}{A character string indicating whether to filter the data by valid ODA commitments cases or valid ODA disbursements cases. Options are \code{"commitments"} (default) or \code{"disbursements"}.}
+\item{by}{A character string indicating whether to filter the data by valid ODA commitments cases, valid ODA disbursements cases, or valid Chinese development finance cases. Options are \code{"commitments"} (default), \code{"disbursements"}, or "chinese".}
 }
 \value{
 A data frame whittled down to just the relevant universe of donor and/or recipient cases.
 }
 \description{
 The \code{filter_rdr()} function will filter a dataset populated with ODA
-values by way of the \code{add_oda()} function down to relevant cases
-for studying ODA. In the case of a dyad-year level dataset, it will
+values by way of the \code{add_oda()} or \code{add_gcdf()} functions down to relevant cases
+for studying development financial flows. In the case of a dyad-year level dataset, it will
 remove rows where a donor (side 1) and recipient (side 2) are not a valid
 donor-recipient pair in the OECD's DAC2a and DAC3a data tables. In the case
-of a state-year level dataset, it will remove rows where either a donor
-or a recipient (depending on the type specified in \code{add_oda()}) that is
-not a valid donor or recipient included in the OECD's data. This function
+of a state-year level dataset with values from \code{add_oda()}, it will remove rows where either a donor
+or a recipient (depending on the type specified in \code{add_oda()}) is
+not a valid donor or recipient included in the OECD's data.
+Alternatively, it will drop rows where Chinese development financing is not relevant if the data was populated with data via \code{add_gcdf()}.
+This function
 is useful when performing standard dyadic or monadic analysis of aid giving
 where the analyst is only interested in the relevant universe of foreign
 aid donors and/or recipients.

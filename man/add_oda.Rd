@@ -33,10 +33,10 @@ library(odadata)
 # make a dyad-year dataset:
 dt <- create_dyadyears(subset_years = 1960:2023) |>
   add_oda() |>
-  drop_na(oda_committed) # drops invalid donor-recipient pairs
+  filter_rdr() # drops invalid donor-recipient pairs
 
 # make a state-year dataset for aid repients:
 dt <- create_stateyears(subset_years = 1960:2023) |>
   add_oda(type = "recipient") |>
-  drop_na(oda_committed) # drops non-recipients 
+  filter_rdr() # drops non-recipients 
 }
